@@ -180,18 +180,36 @@ class FullyConnectedNet(object):
 ############################################################################
         # initialization for W and b
         dims = [input_dim] + hidden_dims + [num_classes]
-        for i in range(1, len(dims)):
-            W = np.random.normal(0, weight_scale,(dims[i-1], dims[i]))
+        for i in range(1, len(dims) - 1):
+            #W = np.random.normal(0, weight_scale,(dims[i-1], dims[i]))
+            W = np.random.randn(dims[i-1], dims[i]) * weight_scale
             b = np.zeros(dims[i])
             self.params['W' + str(i)] = W
             self.params['b' + str(i)] = b
+        self.params['W'+str(self.num_layers)] = np.random.randn(hidden_dims[-1], num_classes)
+        self.params['b'+str(self.num_layers)] = np.random.randn(num_classes)
                 
         # initialization for gamma and beta
         if self.use_batchnorm:
             for i in range(len(hidden_dims)):
                 self.params['gamma' + str(i+1)] = np.ones(hidden_dims[i])
                 self.params['beta' + str(i+1)] = np.zeros(hidden_dims[i])
-
+        
+        '''
+        self.params['W1'] = np.random.randn(input_dim, hidden_dims[0]) * weight_scale
+        self.params['b1'] = np.zeros(hidden_dims[0])
+        for i in range(self.num_layers - 2):
+            self.params['W' + str(i+2)] = np.random.randn(hidden_dims[i], hidden_dims[i+1]) * weight_scale
+            self.params['b' + str(i+2)] = np.zeros(hidden_dims[i+1])
+            if self.use_batchnorm:
+                self.params['gamma' + str(i+1)] = np.ones(hidden_dims[i])
+                self.params['beta' + str(i+1)] = np.zeros(hidden_dims[i])
+        if self.use_batchnorm:
+            self.params['gamma' + str(self.num_layers - 1)] = np.ones(hidden_dims[-1])
+            self.params['beta' + str(self.num_layers - 1)] = np.zeros(hidden_dims[-1])
+        self.params['W' + str(self.num_layers)] = np.random.randn(hidden_dims[-1], num_classes)
+        self.params['b' + str(self.num_layers)] = np.random.randn(num_classes)
+        '''
 ############################################################################
 #                             END OF YOUR CODE                             #
 ############################################################################
@@ -253,20 +271,18 @@ class FullyConnectedNet(object):
         actives, caches = list(range(nl+1)), list(range(nl))
         dp_caches = list(range(nl-1))
         actives[0] = X
-        for i in range(nl-1):
+        for i in range(nl):
             W, b = self.params['W' + str(i+1)], self.params['b' + str(i+1)]
-            if self.use_batchnorm:
-                print(self.bn_params[i])
-                gamma, beta = self.params['gamma'+str(i+1)], self.params['beta'+str(i+1)]
-                actives[i+1], caches[i] = affine_bn_relu_forward(actives[i], W, b, gamma, beta, bn_params[i])
+            if i != nl -1:
+                if self.use_batchnorm:
+                    gamma, beta = self.params['gamma'+str(i+1)], self.params['beta'+str(i+1)]
+                    actives[i+1], caches[i] = affine_bn_relu_forward(actives[i], W, b, gamma, beta, self.bn_params[i])
+                else:
+                    actives[i+1], caches[i] = affine_relu_forward(actives[i], W, b)
+                if self.use_dropout:
+                    actives[i+1], dp_caches[i] = dropout_forward(actives[i+1], self.dropout_param)
             else:
-                actives[i+1], caches[i] = affine_relu_forward(actives[i], W, b)
-            if self.use_dropout:
-                actives[i+1], dp_caches[i] = dropout_forward(actives[i+1], self.dropout_param)
-
-         # last layer
-        W, b = self.params['W' + str(nl)], self.params['b' + str(nl)]
-        actives[nl], caches[nl-1] = affine_forward(actives[nl-1], W, b)
+                actives[i+1], caches[i] = affine_forward(actives[i], W, b)  
         
         scores = actives[nl] 
 ############################################################################
@@ -294,17 +310,19 @@ class FullyConnectedNet(object):
         loss, dscores = softmax_loss(scores, y)
         ders = list(range(nl+1))
         ders[nl] = dscores
-        dx, dw, db = affine_backward(ders[nl], caches[nl-1])
-        ders[nl-1], grads['W'+str(nl)], grads['b'+str(nl)] = dx, dw, db
-        for i in (range(nl-1, 0, -1)):
-            if self.use_dropout:
-                ders[i] = dropout_backward(ders[i], dp_caches[i-1])
-            if self.use_batchnorm:
-                dx, dw, db, dgamma, dbeta = affine_bn_relu_backward(ders[i], caches[i-1])
-                ders[i-1], grads['W'+str(i)], grads['b'+str(i)] = dx, dw, db
-                grads['gamma'+str(i)], grads['beta'+str(i)] = dgamma, dbeta
+        for i in (range(nl, 0, -1)):
+            if i != nl:
+                if self.use_dropout:
+                    ders[i] = dropout_backward(ders[i], dp_caches[i-1])
+                if self.use_batchnorm:
+                    dx, dw, db, dgamma, dbeta = affine_bn_relu_backward(ders[i], caches[i-1])
+                    ders[i-1], grads['W'+str(i)], grads['b'+str(i)] = dx, dw, db
+                    grads['gamma'+str(i)], grads['beta'+str(i)] = dgamma, dbeta
+                else:
+                    dx, dw, db = affine_relu_backward(ders[i], caches[i-1])
+                    ders[i-1], grads['W'+str(i)], grads['b'+str(i)] = dx, dw, db
             else:
-                dx, dw, db = affine_relu_backward(ders[i], caches[i-1])
+                dx, dw, db = affine_backward(ders[i], caches[i-1])
                 ders[i-1], grads['W'+str(i)], grads['b'+str(i)] = dx, dw, db
             loss += 0.5 * self.reg * (np.sum(self.params['W'+str(i)] ** 2))
             grads['W'+str(i)] += self.reg * self.params['W'+str(i)]
