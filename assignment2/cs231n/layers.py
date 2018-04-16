@@ -412,7 +412,22 @@ def conv_forward_naive(x, w, b, conv_param):
     # TODO: Implement the convolutional forward pass.                         #
     # Hint: you can use the function np.pad for padding.                      #
     ###########################################################################
-    pass
+    stride, pad = conv_param['stride'], conv_param['pad'] # 2 1
+    N, C, H, W = x.shape
+    F, C, HH, WW = w.shape
+    Hp = 1 + (H + 2 * pad - HH) / stride
+    Wp = 1 + (W + 2 * pad - WW) / stride
+    out  = np.zeros([N, F, Hp, Wp])
+    x_pad = np.pad(x, ((0,0), (0,0), (pad,pad), (pad,pad)), 'constant')
+    for i in range(Hp):
+        for j in range(Wp):
+            x_sub = x_pad[:, :, i*stride:i*stride+HH, j*stride:j*stride+WW]
+            for k in range(F):
+                out[:,k,i,j] = np.sum(x_sub * w[k,:,:,:], axis=(1,2,3))
+
+    for i in range(F):
+        out[:,i,:,:] += b[i]
+    #out = out + (b)[None,:,None,None]
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -437,7 +452,28 @@ def conv_backward_naive(dout, cache):
     ###########################################################################
     # TODO: Implement the convolutional backward pass.                        #
     ###########################################################################
-    pass
+    x, w, b, conv_param = cache
+    stride, pad = conv_param['stride'], conv_param['pad'] # 2 1
+    N, C, H, W = x.shape
+    F, C, HH, WW = w.shape
+    Hp, Wp = dout.shape[2], dout.shape[3] 
+    x_pad = np.pad(x, ((0,0), (0,0), (pad,pad), (pad,pad)), 'constant')
+    dx = np.zeros_like(x)
+    dxp = np.zeros_like(x_pad)
+    dw = np.zeros_like(w)
+    db = np.zeros_like(b)
+    
+    db = np.sum(dout, axis=(0,2,3))
+
+    for i in range(Hp):
+        for j in range(Wp):
+            x_sub = x_pad[:, :, i*stride:i*stride+HH, j*stride:j*stride+WW]
+            for k in range(F):
+                for l in range(N):
+                    dw[k,:,:,:] += x_sub[l,:,:,:] * dout[l,k,i,j]
+                    dxp[l, :, i*stride:i*stride+HH, j*stride:j*stride+WW] += w[k,:,:,:] * dout[l,k,i,j]
+
+    dx = dxp[:, :, pad:-pad, pad:-pad]
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
