@@ -187,7 +187,7 @@ class FullyConnectedNet(object):
             self.params['W' + str(i)] = W
             self.params['b' + str(i)] = b
         self.params['W'+str(self.num_layers)] = np.random.randn(hidden_dims[-1], num_classes)
-        self.params['b'+str(self.num_layers)] = np.random.randn(num_classes)
+        self.params['b'+str(self.num_layers)] = np.zeros(num_classes)
                 
         # initialization for gamma and beta
         if self.use_batchnorm:
