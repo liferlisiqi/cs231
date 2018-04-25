@@ -137,18 +137,21 @@ class CaptioningRNN(object):
         # defined above to store loss and gradients; grads[k] should give the      #
         # gradients for self.params[k].                                            #
         ############################################################################
+        # forward
         h0, cache0 = affine_forward(features, W_proj, b_proj)
         x, cache1 = word_embedding_forward(captions_in, W_embed)
-        if(self.cell_type=='rnn'):
+        if self.cell_type == 'rnn':
             hs, caches = rnn_forward(x, h0, Wx, Wh, b)
+        elif self.cell_type == 'lstm' :
+            hs, caches = lstm_forward(x, h0, Wx, Wh, b)
         out, cachet = temporal_affine_forward(hs, W_vocab, b_vocab)
         loss, dL = temporal_softmax_loss(out, captions_out, mask)
-
-        grads['W_proj'], grads['b_proj'] = np.zeros_like(W_proj), np.zeros_like(b_proj)
-
+        # backward
         dout, grads['W_vocab'], grads['b_vocab'] = temporal_affine_backward(dL, cachet)
-        if(self.cell_type=='rnn'):
+        if self.cell_type == 'rnn':
             drnn, dh0, grads['Wx'], grads['Wh'], grads['b']  = rnn_backward(dout, caches)
+        elif self.cell_type == 'lstm':
+            drnn, dh0, grads['Wx'], grads['Wh'], grads['b'] = lstm_backward(dout, caches)
         grads['W_embed']  = word_embedding_backward(drnn, cache1)
         dx, grads['W_proj'], grads['b_proj'] = affine_backward(dh0, cache0)
         ############################################################################
@@ -213,12 +216,17 @@ class CaptioningRNN(object):
         # a loop.                                                                 #
         ###########################################################################
         pre_h, _ = affine_forward(features, W_proj, b_proj)
+        pre_c = np.zeros_like(pre_h)
         x = np.array([self._start for i in range(N)])
         captions[:,0] = self._start
         for t in range(1, max_length):
             x_emb, _ = word_embedding_forward(x, W_embed)
             if self.cell_type == 'rnn':
                 next_h, _ = rnn_step_forward(x_emb, pre_h, Wx, Wh, b)
+                pre_h = next_h
+            elif self.cell_type == 'lstm':
+                next_h, next_c, _ = lstm_step_forward(x_emb, pre_h, pre_c, Wx, Wh, b)
+                pre_c = next_c
                 pre_h = next_h
             out, _ = affine_forward(next_h, W_vocab, b_vocab)
             #x = out.argmax(1)

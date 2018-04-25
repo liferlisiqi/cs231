@@ -33,6 +33,8 @@ The Jupyter notebook `RNN_Captioning.ipynb` will walk you through the implementa
 
 ### Q2: Image Captioning with LSTMs (30 points)
 The Jupyter notebook `LSTM_Captioning.ipynb` will walk you through the implementation of Long-Short Term Memory (LSTM) RNNs, and apply them to image captioning on MS-COCO.
+[Backpropogating an LSTM: A Numerical Example](https://medium.com/@aidangomez/let-s-do-this-f9b699de31d9)  
+[Deriving LSTM Gradient for Backpropagation](https://wiseodd.github.io/techblog/2016/08/12/lstm-backprop/)
 
 ### Q3: Network Visualization: Saliency maps, Class Visualization, and Fooling Images (15 points)
 The Jupyter notebooks `NetworkVisualization-TensorFlow.ipynb /NetworkVisualization-PyTorch.ipynb` will introduce the pretrained SqueezeNet model, compute gradients with respect to images, and use them to produce saliency maps and fooling images. Please complete only one of the notebooks (TensorFlow or PyTorch). No extra credit will be awardeded if you complete both notebooks.
