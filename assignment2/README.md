@@ -1,4 +1,4 @@
-# Assignment3
+# Assignment2
 
 In this assignment you will practice writing backpropagation code, and training
 Neural Networks and Convolutional Neural Networks. The goals of this assignment
