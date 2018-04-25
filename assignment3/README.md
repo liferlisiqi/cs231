@@ -31,6 +31,9 @@ cd cs231n/datasets
 
 ### Q1: Image Captioning with Vanilla RNNs (25 points)
 The Jupyter notebook `RNN_Captioning.ipynb` will walk you through the implementation of an image captioning system on MS-COCO using vanilla recurrent networks.
+参考链接:
+[循环神经网络(RNN)模型与前向反向传播算法]{https://www.cnblogs.com/pinard/p/6509630.html}
+[np.ufunc.at]{https://docs.scipy.org/doc/numpy/reference/generated/numpy.ufunc.at.html}
 
 ### Q2: Image Captioning with LSTMs (30 points)
 The Jupyter notebook `LSTM_Captioning.ipynb` will walk you through the implementation of Long-Short Term Memory (LSTM) RNNs, and apply them to image captioning on MS-COCO.

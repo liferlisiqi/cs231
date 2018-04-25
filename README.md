@@ -10,3 +10,6 @@ Notes: [英](https://github.com/liferlisiqi/cs231/tree/master/Notes)
 
 [assignment1](https://github.com/liferlisiqi/cs231/tree/master/assignment1)   
 [assignment2](https://github.com/liferlisiqi/cs231/tree/master/assignment2)
+[assignment3](https://github.com/liferlisiqi/cs231/tree/master/assignment3)
+
+参考代码:https://github.com/Halfish/cs231n
